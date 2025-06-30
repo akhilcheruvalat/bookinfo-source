@@ -1,10 +1,11 @@
 apiVersion: v2
-name: bookinfo
-version: 0.1.0
+name: bookinfo-processor
+version: 1.0.4-SNAPSHOT
+appVersion: develop-SNAPSHOT
 type: application
-description: A Helm chart for Bookinfo microservice
+description: A Helm chart for Bookinfo Processor microservice
 sources:
-  - https://github.com/akhilcheruvalat/bookinfo-source
+  - https://github.com/muralikrishnagk/bookinfo-source
 maintainers:
   - name: Akhil Cheruvalath
     email: your.email@example.com

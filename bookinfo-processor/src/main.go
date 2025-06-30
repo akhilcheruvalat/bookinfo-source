@@ -17,7 +17,7 @@ var (
 
 func logRequestHandler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		fmt.Printf("bookinfo-service: Received request: %s %s\n", r.Method, r.URL.Path)
+		fmt.Printf("bookinfo-processor: Received request: %s %s\n", r.Method, r.URL.Path)
 		h.ServeHTTP(w, r)
 	})
 }
@@ -37,7 +37,7 @@ func main() {
 	// Kubernetes readiness probe endpoint
 	http.HandleFunc("/readiness", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("I am ready to serve traffic"))
+		w.Write([]byte("Ready"))
 	})
 
 	// Kubernetes liveness probe endpoint
@@ -50,7 +50,7 @@ func main() {
 	http.HandleFunc("/api/info", func(w http.ResponseWriter, r *http.Request) {
 		// Create a map to hold basic service info
 		info := map[string]interface{}{
-			"service":   "bookinfo-service",
+			"service":   "bookinfo-processor",
 			"version":   version,
 			"commit":    commit,
 			"buildDate": buildDate,
@@ -76,11 +76,24 @@ func main() {
 	})
 
 	// Keep the old endpoint temporarily for backward compatibility
-	http.HandleFunc("/api/service/info", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("WARNING: /api/service/info is deprecated, use /api/info instead")
+	http.HandleFunc("/api/processor/info", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("WARNING: /api/processor/info is deprecated, use /api/info instead")
 		http.Redirect(w, r, "/api/info", http.StatusTemporaryRedirect)
 	})
 
-	fmt.Printf("Starting bookinfo-service version: %s, commit: %s, buildDate: %s on port %s\n", version, commit, buildDate, port)
+	// Standardized process endpoint
+	http.HandleFunc("/api/process", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte("{\"status\": \"processed\", \"item_id\": \"example123\"}"))
+	})
+
+	// Keep the old process endpoint temporarily for backward compatibility
+	http.HandleFunc("/api/processor/process", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("WARNING: /api/processor/process is deprecated, use /api/process instead")
+		http.Redirect(w, r, "/api/process", http.StatusTemporaryRedirect)
+	})
+
+	fmt.Printf("Starting Bookinfo Processor service version: %s, commit: %s, buildDate: %s on port %s\n", version, commit, buildDate, port)
 	http.ListenAndServe(":"+port, logRequestHandler(http.DefaultServeMux))
 }

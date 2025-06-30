@@ -1,0 +1,47 @@
+replicaCount: 1
+
+image:
+  repository: localhost:5000/bookinfo-service
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80 # Default service port
+
+resources:
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+  limits:
+    cpu: "200m"
+    memory: "256Mi"
+
+nodeSelector: {}
+
+tolerations: []
+
+# ConfigMap settings for the service
+configMap:
+  enabled: true
+  data:
+    API_TIMEOUT: "5000"
+    MAX_CONNECTIONS: "10"
+    DB_POOL_SIZE: "3"
+    LOG_LEVEL: "info"
+    FEATURE_FLAGS: "reviews-enabled,ratings-enabled"
+    SERVICE_ENV: "default"
+
+env:
+  - name: ENVIRONMENT
+    value: ""
+
+livenessProbe:
+  enabled: true
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  enabled: true
+  initialDelaySeconds: 5
+  periodSeconds: 5

@@ -1,25 +1,32 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Release.Name }}-bookinfo
+  name: {{ .Release.Name }}-bookinfo-service
   labels:
-    app: {{ .Release.Name }}-bookinfo
-    app.kubernetes.io/name: bookinfo
+    app.kubernetes.io/name: bookinfo-service
     app.kubernetes.io/instance: {{ .Release.Name }}
+    app: {{ .Release.Name }}-bookinfo-service # Retaining original app label for compatibility if needed
+    {{- with .Values.commonLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-bookinfo
+      app.kubernetes.io/name: bookinfo-service
+      app.kubernetes.io/instance: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-bookinfo
-        app.kubernetes.io/name: bookinfo
+        app.kubernetes.io/name: bookinfo-service
         app.kubernetes.io/instance: {{ .Release.Name }}
+        app: {{ .Release.Name }}-bookinfo-service # Retaining original app label
+        {{- with .Values.commonLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
     spec:
       containers:
-      - name: bookinfo
+      - name: bookinfo-service
         image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
         imagePullPolicy: {{ .Values.image.pullPolicy }}
         ports:
@@ -38,6 +45,16 @@ spec:
         {{- range .Values.env }}
         - name: {{ .name }}
           value: {{ .value | quote }}
+        {{- end }}
+        {{- if .Values.configMap.enabled }}
+        # Mount ConfigMap as environment variables
+        {{- range $key, $val := .Values.configMap.data }}
+        - name: {{ $key }}
+          valueFrom:
+            configMapKeyRef:
+              name: {{ $.Release.Name }}-bookinfo-service-config
+              key: {{ $key }}
+        {{- end }}
         {{- end }}
         livenessProbe:
           httpGet:
